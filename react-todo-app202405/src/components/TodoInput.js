@@ -3,9 +3,12 @@ import '../scss/TodoInput.scss';
 import { MdAdd } from 'react-icons/md';
 import cn from 'classnames';
 
-const TodoInput = () => {
+const TodoInput = ({ addTodo }) => {
   // 입력 창이 열리는 여부를 표현 하는 상태값
   const [open, setOpen] = useState(false);
+
+  // 할일 입력창에 입력한 내용을 표현하는 상태값
+  const [todoText, setTodoText] = useState('');
 
   // 버튼 클릭 시 이벤트
   // 논리 반전 이용하기!
@@ -13,12 +16,33 @@ const TodoInput = () => {
     setOpen(!open);
   };
 
+  // input change 이벤트 핸들러
+  const todoChangeHandler = (e) => {
+    setTodoText(e.target.value);
+  };
+
+  // submit 이벤트 핸들러
+  const submitHandler = (e) => {
+    e.preventDefault(); // 태그의 기본 기능 제한(submit 막기)
+
+    // 부모 컴포넌트가 전달한 함수의 매개값으로 입력값 넘기기
+    addTodo(todoText);
+
+    // 입력이 끝나면 입력창 비우기
+    setTodoText('');
+  };
+
   return (
     <>
       {open && (
         <div className="form-wrapper">
-          <form className="insert-form">
-            <input type="text" placeholder="할 일을 입력 후 엔터를 누르세요." />
+          <form className="insert-form" onSubmit={submitHandler}>
+            <input
+              type="text"
+              placeholder="할 일을 입력 후 엔터를 누르세요."
+              onChange={todoChangeHandler}
+              value={todoText}
+            />
           </form>
         </div>
       )}
