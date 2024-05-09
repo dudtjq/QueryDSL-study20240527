@@ -65,10 +65,25 @@ const TodoTemplate = () => {
     setTodos(removedTodos);
   };
 
+  // 할일 체크 처리 함수
+  const checkTodo = (id) => {
+    setTodos(
+      todos.map((todo) => {
+        return todo.id === id ? { ...todo, done: !todo.done } : todo;
+      }),
+    );
+  };
+
+  // 체크가 안 된 할 일의 개수를 카운트 하기
+  const countRestTodo = () => {
+    const noChcekTodo = todos.filter((todo) => !todo.done);
+    return noChcekTodo.length;
+  };
+
   return (
     <div className="TodoTemplate">
-      <TodoHeader />
-      <TodoMain todoList={todos} remove={removeTodo} />
+      <TodoHeader count={countRestTodo} />
+      <TodoMain todoList={todos} remove={removeTodo} check={checkTodo} />
       <TodoInput addTodo={addTodo} />
     </div>
   );
