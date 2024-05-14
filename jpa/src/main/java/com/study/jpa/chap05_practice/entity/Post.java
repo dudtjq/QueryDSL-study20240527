@@ -6,6 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Setter @Getter
 @ToString(exclude = {"HashTag"})
@@ -25,6 +27,9 @@ public class Post {
     @Column(nullable = false) // not null
     private String writer; // 작성자
 
+    @Column(nullable = false)
+    private String title;
+
     private String content; // 글 내용
 
     @CreationTimestamp
@@ -33,5 +38,8 @@ public class Post {
 
     @UpdateTimestamp
     private LocalDateTime updateDate; // 수정 시간
+
+    @OneToMany(mappedBy = "post")
+    List<HashTag> hashTags = new ArrayList<>();
 
 }

@@ -28,7 +28,5 @@ public class HashTag {
     @JoinColumn(name = "post_no")
     private Post post;
 
-    @OneToMany(mappedBy = "post_no")
-    List<HashTag> hashTags = new ArrayList<>();
 
 }
