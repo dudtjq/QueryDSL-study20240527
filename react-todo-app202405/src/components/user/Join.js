@@ -7,6 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useState } from 'react';
+import { API_BASE_URL, USER } from '../../config/host-config';
 
 const Join = () => {
   // 상태 변수로 회원가입 입력값 관리
@@ -82,6 +83,58 @@ const Join = () => {
     });
   };
 
+  // 이메일 중복 체크 서버 통신 함수
+  const fetchDuplicateCheck = (email) => {
+    let msg = '';
+    let flag = false;
+
+    fetch(`${API_BASE_URL}${USER}/check?email=${email}`)
+      .then((res) => res.json())
+      .then((result) => {
+        console.log('result: ', result);
+        if (result) {
+          msg = '이메일이 중복되었습니다.';
+        } else {
+          msg = '사용 가능한 이메일 입니다.';
+          flag = true;
+        }
+        // 중복 확인 후 상태값 변경.
+        saveInputState({
+          key: 'email',
+          inputValue: email,
+          msg,
+          flag,
+        });
+      });
+  };
+
+  // 이메일 입력창 체인지 이벤트 핸들러
+  const emailHandler = (e) => {
+    const inputValue = e.target.value;
+    const emailRegex = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-Za-z0-9\-]+/;
+
+    let msg;
+    let flag = false;
+
+    if (!inputValue) {
+      msg = '이메일은 필수 값 입니다.';
+    } else if (!emailRegex.test(inputValue)) {
+      msg = '이메일 형식이 올바르지 않습니다.';
+    } else {
+      // 이메일 중복 체크
+      fetchDuplicateCheck(inputValue);
+    }
+
+    // 중복확인 후에만 상태변경 하는 것이 아님
+    // 입력창이 비거나, 정규 표현식 위반인 경우에도 상태는 변경 되어야 함!
+    saveInputState({
+      key: 'email',
+      inputValue,
+      msg,
+      flag,
+    });
+  };
+
   return (
     <Container component="main" maxWidth="xs" style={{ margin: '200px auto' }}>
       <form noValidate>
@@ -120,7 +173,9 @@ const Join = () => {
               autoComplete="email"
               onChange={emailHandler}
             />
-            <span></span>
+            <span style={correct.email ? { color: 'green' } : { color: 'red' }}>
+              {message.email}
+            </span>
           </Grid>
           <Grid item xs={12}>
             <TextField
