@@ -1,6 +1,7 @@
 package com.example.todo.todoapi.service;
 
 import com.example.todo.todoapi.dto.request.TodoCreateRequestDTO;
+import com.example.todo.todoapi.dto.response.TodoDetailResponseDTO;
 import com.example.todo.todoapi.dto.response.TodoListResponseDTO;
 import com.example.todo.todoapi.entity.Todo;
 import com.example.todo.todoapi.repository.TodoRepository;
@@ -8,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -17,7 +20,7 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
 
-    public TodoListResponseDTO create(TodoCreateRequestDTO requestDTO) {
+    public TodoListResponseDTO create(TodoCreateRequestDTO requestDTO) throws Exception {
 
         Todo saved = todoRepository.save(requestDTO.toEntity());
 
@@ -28,9 +31,17 @@ public class TodoService {
     }
 
     // 할 일 목록 가져오기
-    public TodoListResponseDTO retrieve(){
+    public TodoListResponseDTO retrieve() throws Exception{
 
+        List<Todo> entityList = todoRepository.findAll();
 
+        List<TodoDetailResponseDTO> dtoList = entityList.stream()
+                .map(TodoDetailResponseDTO::new)
+                .toList();
+
+        return TodoListResponseDTO.builder()
+                .todos(dtoList)
+                .build();
 
     }
 }

@@ -1,17 +1,16 @@
 package com.example.todo.todoapi.api;
 
 import com.example.todo.todoapi.dto.request.TodoCreateRequestDTO;
+import com.example.todo.todoapi.dto.response.TodoListResponseDTO;
 import com.example.todo.todoapi.service.TodoService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,6 +22,7 @@ public class TodoController {
 
     private final TodoService todoService;
 
+    /// 할 일 목록 등록
     @PostMapping
     public ResponseEntity<?> createTodo(
             @Validated @RequestBody TodoCreateRequestDTO requestDTO,
@@ -38,11 +38,47 @@ public class TodoController {
             return validatedResult;
         }
 
-        todoService.create(requestDTO);
+        try {
 
+            TodoListResponseDTO listResponseDTO = todoService.create(requestDTO);
+
+            return ResponseEntity.ok().body(listResponseDTO);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body(TodoListResponseDTO.builder()
+                            .error(e.getMessage())
+                            .build());
+
+        }
 
 
     }
+
+    // 할 일 목록 요청
+    @GetMapping
+    public ResponseEntity<?> retrieveTodoList(){
+        log.info("/api/todos GET request!!");
+
+        try {
+
+            TodoListResponseDTO responseDTO = todoService.retrieve();
+            return ResponseEntity.ok().body(responseDTO);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            return ResponseEntity.internalServerError()
+                    .body(TodoListResponseDTO.builder()
+                            .error(e.getMessage())
+                            .build());
+        }
+
+    }
+
+
 
     // 입력값 검증(Validation)의 결과를 처리해 주는 전역 메서드
     private static ResponseEntity<List<FieldError>> getValidatedResult(BindingResult result) {
