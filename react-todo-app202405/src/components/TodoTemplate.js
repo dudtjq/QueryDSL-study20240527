@@ -43,17 +43,29 @@ const TodoTemplate = () => {
 
   // 할 일 삭제 처리 함수
   const removeTodo = (id) => {
-    const removedTodos = todos.filter((todo) => todo.id !== id);
-    setTodos(removedTodos);
+    fetch(`${API_BASE_URL}/${id}`, {
+      method: 'DELETE',
+    })
+      .then((res) => res.json())
+      .then((data) => setTodos(data.todos))
+      .catch((err) => {
+        console.log('err :', err);
+        alert('잘못된 삭제 요청 입니다.');
+      });
   };
 
   // 할일 체크 처리 함수
-  const checkTodo = (id) => {
-    setTodos(
-      todos.map((todo) => {
-        return todo.id === id ? { ...todo, done: !todo.done } : todo;
+  const checkTodo = (id, done) => {
+    fetch(API_BASE_URL, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        done: !done,
       }),
-    );
+    })
+      .then((res) => res.json())
+      .then((json) => setTodos(json.todos));
   };
 
   // 체크가 안 된 할 일의 개수를 카운트 하기
