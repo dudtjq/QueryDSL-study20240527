@@ -6,3 +6,14 @@
 4. 왼쪽 탭에 고급 설정 클릭
 5. 컴파일러 메뉴 -> 프로젝트가 실행중인 ~~~ auto-make 클릭
 
+## 리액트 라우터 설정
+
+- index.js에 BrowserRouter 컴포넌트로 App 감싸기.
+
+```javascript
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
