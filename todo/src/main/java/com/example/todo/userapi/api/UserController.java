@@ -1,5 +1,6 @@
 package com.example.todo.userapi.api;
 
+import com.example.todo.userapi.dto.request.LoginRequestDTO;
 import com.example.todo.userapi.dto.request.UserSignUpRequestDTO;
 import com.example.todo.userapi.dto.response.UserSignUpResponseDTO;
 import com.example.todo.userapi.service.UserService;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,11 +51,8 @@ public class UserController{
     ){
         log.info("api/auth {} POST!!!", dto);
 
-        if(result.hasErrors()){
-            log.warn(result.toString());
-            return ResponseEntity.badRequest()
-                    .body(result.getFieldError());
-        }
+        ResponseEntity<FieldError> result1 = getFieldErrorResponseEntity(result);
+        if (result1 != null) return result1;
 
         try {
             UserSignUpResponseDTO responseDTO = userService.create(dto);
@@ -64,6 +63,38 @@ public class UserController{
         }
 
     }
+    @PostMapping("/signin")
+    public ResponseEntity<?> signIn(
+            @Validated @RequestBody LoginRequestDTO dto,
+            BindingResult result
+    ){
+
+        log.info("/api/auth/signIn - POST - {}", dto);
+
+        ResponseEntity<FieldError> result1 = getFieldErrorResponseEntity(result);
+        if (result1 != null) return result1;
+
+        try {
+            String authenticate = userService.authenticate(dto);
+            return ResponseEntity.ok().body(authenticate);
+
+        } catch (Exception e) {
+           return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+
+    }
+
+
+    private static ResponseEntity<FieldError> getFieldErrorResponseEntity(BindingResult result) {
+        if(result.hasErrors()){
+            log.warn(result.toString());
+            return ResponseEntity.badRequest()
+                    .body(result.getFieldError());
+        }
+        return null;
+    }
+
 
 
 
