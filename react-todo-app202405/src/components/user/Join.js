@@ -41,9 +41,10 @@ const Join = () => {
   // 검증된 데이터를 각각의 상태변수에 저장해 주는 함수
   const saveInputState = ({ key, inputValue, msg, flag }) => {
     // 입력값 세팅
-    setUserValue((oldValue) => {
-      return { ...oldValue, [key]: inputValue };
-    });
+    inputValue !== 'pass' &&
+      setUserValue((oldValue) => {
+        return { ...oldValue, [key]: inputValue };
+      });
 
     // 메세지 세팅
     setMessage((oldMsg) => {
@@ -135,6 +136,94 @@ const Join = () => {
     });
   };
 
+  // 패스워드 입력창 체인지 이벤트 핸들러
+  const passwordHandler = (e) => {
+    document.getElementById('password-check').value = '';
+
+    setMessage({ ...message, passwordCheck: '' });
+    setCorrect({ ...correct, passwordCheck: false });
+
+    const inputValue = e.target.value;
+    const pwRegex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,20}$/;
+
+    let msg;
+    let flag = false;
+
+    if (!inputValue) {
+      msg = '비밀번호는 필수 값 입니다.';
+    } else if (!pwRegex.test(inputValue)) {
+      msg = '8글자 이상의 영문, 숫자, 특수문자를 포함해 주세요.';
+    } else {
+      msg = '사용 가능한 비밀번호 입니다.';
+      flag = true;
+    }
+
+    saveInputState({
+      key: 'password',
+      inputValue,
+      msg,
+      flag,
+    });
+  };
+
+  const passwordCheckHandler = (e) => {
+    let msg;
+    let flag = false;
+
+    if (!e.target.value) {
+      msg = '비밀번호 확인 란은 필수 값 입니다.';
+    } else if (!userValue.password !== e.target.value) {
+      msg = '비밀번호가 일치 하지 않습니다.';
+    } else {
+      msg = '비밀번호가 일치 합니다.';
+      flag = true;
+    }
+
+    saveInputState({
+      key: 'passwordCheck',
+      inputValue: 'pass',
+      msg,
+      flag,
+    });
+  };
+
+  const isValid = () => {
+    for (let key in correct) {
+      const flag = correct[key];
+      if (!flag) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const fetchSignUpPost = () => {
+    fetch(`${API_BASE_URL}${USER}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(userValue);
+    })
+    .then((res) => res.json())
+    .then((data) => {
+      alert(`${data.userName}(${data.email})님 회원가입에 성공하였습니다.`)
+    })
+    .catch((err) => {
+      console.log('err:', err);
+      alert('서버와의 통신이 원할하지 않습니다. 관리자에게 문의 하세요')
+    });
+  };
+
+  const joinButtonCheckHandler = (e) => {
+    e.preventDefault();
+
+    if (isValid()) {
+      fetchSignUpPost();
+    } else {
+      alert('입력란을 다시 확인 하세요.');
+    }
+  };
+
   return (
     <Container component="main" maxWidth="xs" style={{ margin: '200px auto' }}>
       <form noValidate>
@@ -187,8 +276,13 @@ const Join = () => {
               type="password"
               id="password"
               autoComplete="current-password"
+              onChange={passwordHandler}
             />
-            <span></span>
+            <span
+              style={correct.password ? { color: 'green' } : { color: 'red' }}
+            >
+              {message.password}
+            </span>
           </Grid>
 
           <Grid item xs={12}>
@@ -201,8 +295,16 @@ const Join = () => {
               type="password"
               id="password-check"
               autoComplete="check-password"
+              onChange={passwordCheckHandler}
             />
-            <span id="check-span"></span>
+            <span
+              id="check-span"
+              style={
+                correct.passwordCheck ? { color: 'green' } : { color: 'red' }
+              }
+            >
+              {message.passwordCheck}
+            </span>
           </Grid>
 
           <Grid item xs={12}>
@@ -211,6 +313,7 @@ const Join = () => {
               fullWidth
               variant="contained"
               style={{ background: '#38d9a9' }}
+              onClick={joinButtonCheckHandler}
             >
               계정 생성
             </Button>
