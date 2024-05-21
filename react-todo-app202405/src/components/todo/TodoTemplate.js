@@ -11,6 +11,16 @@ const TodoTemplate = () => {
   // todos 배열을 상태 관리
   const [todos, setTodos] = useState([]);
 
+  // 로그인 인증 토큰 얻어오기
+  const token = localStorage.getItem('ACCESS_TOKEN');
+
+  // fetch 요청을 보낼 때 사용할 요청 헤더 설정
+  const requestHeader = {
+    'content-type': 'application/json',
+    // JWT 에 대한 인증 토큰이라는 타입을 선언
+    Authorization: 'Bearer ' + token,
+  };
+
   /*
   TodoInput에게 todoText를 받아오는 함수
   자식 컴포넌트가 부모 컴포넌트에게 데이터를 전달할 때는
@@ -25,7 +35,7 @@ const TodoTemplate = () => {
 
     const res = await fetch(API_BASE_URL, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: requestHeader,
       body: JSON.stringify(newTodo),
     });
 
