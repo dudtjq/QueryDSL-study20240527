@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // 새로운 전역 컨텍스트 생성
 const AuthContext = React.createContext({
@@ -32,6 +32,13 @@ export const AuthContextProvider = (props) => {
     setIsLoggedIn(false);
     setUserName('');
   };
+
+  useEffect(() => {
+    if (localStorage.getItem('ACCESS_TOKEN')) {
+      setIsLoggedIn(true);
+      setUserName(localStorage.getItem('LOGIN_USERNAME'));
+    }
+  }, []);
 
   return (
     <AuthContext.Provider
