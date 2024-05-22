@@ -36,6 +36,15 @@ public class UserService {
     @Value("${upload.path}")
     private String uploadRootPath;
 
+    @Value("${kakao.client_id}")
+    private String KAKAO_CLIENT_ID;
+
+    @Value("${kakao.redirect_url}")
+    private String KAKAO_REDIRECT_URL;
+
+    @Value("${kakao.client_secret}")
+    private String KAKAO_CLIENT_SECRET;
+
     public boolean isDuplicate(String email) {
         if (userRepository.existsByEmail(email)) {
             log.warn("이메일이 중복되었습니다. - {}", email);
@@ -142,6 +151,13 @@ public class UserService {
         // DB 에는 파일명만 저장 -> service 가 가지고 있는 Root Path 와 연결 해서 리턴
 
         return uploadRootPath + "/" + user.getProfileImage() ;
+
+    }
+
+    public void kakaoService(String code) {
+
+
+
 
     }
 }
