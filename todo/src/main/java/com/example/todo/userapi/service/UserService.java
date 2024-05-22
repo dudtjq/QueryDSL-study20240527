@@ -1,10 +1,13 @@
 package com.example.todo.userapi.service;
 
 import com.example.todo.auth.TokenProvider;
+import com.example.todo.auth.TokenUserInfo;
+import com.example.todo.exception.NoRegisteredArgumentException;
 import com.example.todo.userapi.dto.request.LoginRequestDTO;
 import com.example.todo.userapi.dto.request.UserSignUpRequestDTO;
 import com.example.todo.userapi.dto.response.LoginResponseDTO;
 import com.example.todo.userapi.dto.response.UserSignUpResponseDTO;
+import com.example.todo.userapi.entity.Role;
 import com.example.todo.userapi.entity.User;
 import com.example.todo.userapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +34,7 @@ public class UserService {
         } else return false;
     }
 
-    public UserSignUpResponseDTO create(final UserSignUpRequestDTO dto) throws Exception {
+    public UserSignUpResponseDTO create(final UserSignUpRequestDTO dto) {
         String email = dto.getEmail();
 
         if (isDuplicate(email)) {
@@ -50,7 +53,7 @@ public class UserService {
 
     }
 
-    public LoginResponseDTO authenticate(final LoginRequestDTO dto) throws Exception {
+    public LoginResponseDTO authenticate(final LoginRequestDTO dto) {
 
         // 이메일을 통해 회원 정보 조회
         User user = userRepository.findByEmail(dto.getEmail())
@@ -72,5 +75,25 @@ public class UserService {
 
         return new LoginResponseDTO(user, token);
 
+    }
+
+    public LoginResponseDTO promoteToPremium(TokenUserInfo userInfo) {
+
+        User user = userRepository.findById(userInfo.getUserId())
+                .orElseThrow(() -> new NoRegisteredArgumentException("회원 조회에 실패했습니다."));
+
+        // 일반(COMMON) 회원이 아니라면 예외 발생
+        if (userInfo.getRole() != Role.COMMON) {
+            throw new IllegalArgumentException("일반 회원이 아니라면 등급을 상승시킬 수 없습니다.");
+        }
+
+        // 등급 변경
+        user.changeRole(Role.PREMIUM);
+        User saved = userRepository.save(user);
+
+        // 토큰을 재발급! (새롭게 변경된 정보가 반영된)
+        String token = tokenProvider.createToken(saved);
+
+        return new LoginResponseDTO(saved, token);
     }
 }

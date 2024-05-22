@@ -53,14 +53,8 @@ public class UserController {
         ResponseEntity<FieldError> resultEntity = getFieldErrorResponseEntity(result);
         if (resultEntity != null) return resultEntity;
 
-        try {
-            UserSignUpResponseDTO responseDTO = userService.create(dto);
-            return ResponseEntity.ok().body(responseDTO);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-
+        UserSignUpResponseDTO responseDTO = userService.create(dto);
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     // 로그인 요청 처리 메서드를 선언하세요.
@@ -78,35 +72,23 @@ public class UserController {
         ResponseEntity<FieldError> response = getFieldErrorResponseEntity(result);
         if (response != null) return response;
 
-        try {
-            LoginResponseDTO responseDTO = userService.authenticate(dto);
-            return ResponseEntity.ok().body(responseDTO);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-
+        LoginResponseDTO responseDTO = userService.authenticate(dto);
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     // 일반 회원을 프리미엄 회원으로 승격하는 요청 처리
     @PutMapping("/promote")
     // 권한 검사 (해당 권한이 아니라면 인가처리 거부 -> 403 상태 리턴)
-    // 메서드 호출 전에 검사 -> 요청 당시 토큰에 있는 user 정보가 ROLE_COMMON 이라는 권한을 가지고
-    // 있는지를 검사
+    // 메서드 호출 전에 검사 -> 요청 당시 토큰에 있는 user 정보가 ROLE_COMMON이라는 권한을 가지고 있는지를 검사.
     @PreAuthorize("hasRole('ROLE_COMMON')")
     public ResponseEntity<?> promote(
             @AuthenticationPrincipal TokenUserInfo userInfo
-            ){
+    ) {
+        log.info("/api/auth/promote - PUT!");
 
-        log.info("/api/auth/promote - PUT!!");
-
-
-        return null;
-
-
+        LoginResponseDTO responseDTO = userService.promoteToPremium(userInfo);
+        return ResponseEntity.ok().body(responseDTO);
     }
-
-
 
 
     private static ResponseEntity<FieldError> getFieldErrorResponseEntity(BindingResult result) {
