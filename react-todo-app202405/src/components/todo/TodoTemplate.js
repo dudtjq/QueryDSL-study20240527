@@ -21,7 +21,7 @@ const TodoTemplate = () => {
   const [loading, setLoding] = useState(true);
 
   // 로그인 인증 토큰 얻어오기
-  const token = localStorage.getItem('ACCESS_TOKEN');
+  const [token, setToken] = useState(localStorage.getItem('ACCESS_TOKEN'));
 
   // fetch 요청을 보낼 때 사용할 요청 헤더 설정
   const requestHeader = {
@@ -47,9 +47,13 @@ const TodoTemplate = () => {
       headers: requestHeader,
       body: JSON.stringify(newTodo),
     });
-
-    const json = await res.json();
-    setTodos(json.todos);
+    if (res.status === 200) {
+      const json = await res.json();
+      setTodos(json.todos);
+    } else if (res.status === 403) {
+      const text = await res.text();
+      alert(text);
+    }
 
     /*
     fetch(API_BASE_URL, {
@@ -107,6 +111,15 @@ const TodoTemplate = () => {
       method: 'PUT',
       headers: requestHeader,
     });
+
+    if (res.status === 400) {
+      alert('이미 프리미엄 회원 입니다.');
+    } else if (res.status === 200) {
+      const json = await res.json();
+      localStorage.setItem('ACCESS_TOKEN', json.token);
+      localStorage.setItem('USER_ROLE', json.role);
+      setToken(json.token);
+    }
   };
 
   useEffect(() => {
