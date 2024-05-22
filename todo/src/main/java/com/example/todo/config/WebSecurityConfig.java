@@ -32,24 +32,25 @@ public class WebSecurityConfig {
         http
                 .csrf(csrfConfig -> csrfConfig.disable()) // CSRF 토큰공격을 방지하기 위한 장치 해제.
                 .cors(Customizer.withDefaults())
-                // 세션 관리 상태를 STATELESS로 설정해서 spring security가 제공하는 세션 생성 및 관리 기능 사용하지 않겠다.
+                // 세션 관리 상태를 STATELESS로 설정해서 spring security 가 제공하는 세션 생성 및 관리 기능 사용하지 않겠다.
                 .sessionManagement(SessionManagement ->
                         SessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // spring에서 제공하는 기본 로그인 폼 사용 안함, http 기반 기본 인증도 안 쓰겠다.
+                // spring 에서 제공하는 기본 로그인 폼 사용 안함, http 기반 기본 인증도 안 쓰겠다.
                 .formLogin(form -> form.disable())
                 .httpBasic(AbstractHttpConfigurer::disable)
-                // 우리가 만든 jwtAuthFilter를 UsernamePasswordAuthenticationFilter보다 먼저 동작하도록 설정.
-                // security를 사용하면, 서버가 가동될 때 기본적으로 제공하는 여러가지 필터가 세팅이 되는데,
-                // jwtAuthFilter를 먼저 배치해서, 얘를 통과하면 인증이 완료가 되도록 처리
+                // 우리가 만든 jwtAuthFilter 를 UsernamePasswordAuthenticationFilter 보다 먼저 동작하도록 설정.
+                // security 를 사용하면, 서버가 가동될 때 기본적으로 제공하는 여러가지 필터가 세팅이 되는데,
+                // jwtAuthFilter 를 먼저 배치해서, 얘를 통과하면 인증이 완료가 되도록 처리
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                // '/api/todos' 라는 요청이 post로 들어오고, Role 값이 ADMIN인 경우 권한 검사 없이 허용하겠다.
+                                // '/api/todos' 라는 요청이 post 로 들어오고, Role 값이 ADMIN 인 경우 권한 검사 없이 허용하겠다.
                                 // .requestMatchers(HttpMethod.POST, "/api/todos").hasRole("ADMIN")
 
-                                // /api/auth/**은 permit이지만, /promote는 검증이 필요하기 때문에 추가. (순서 조심!)
+                                // /api/auth/**은 permit 이지만, /promote 는 검증이 필요하기 때문에 추가. (순서 조심!)
                                 .requestMatchers(HttpMethod.PUT, "/api/auth/promote")
                                 .authenticated()
+                                .requestMatchers("/api/auth/load-profile").authenticated()
                                 // '/api/auth'로 시작하는 요청과 '/'요청은 권한 검사 없이 허용하겠다.
                                 .requestMatchers("/", "/api/auth/**")
                                 .permitAll()

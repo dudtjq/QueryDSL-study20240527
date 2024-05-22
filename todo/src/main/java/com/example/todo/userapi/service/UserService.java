@@ -12,9 +12,15 @@ import com.example.todo.userapi.entity.User;
 import com.example.todo.userapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
 
 
 @Service
@@ -27,6 +33,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
 
+    @Value("${upload.path}")
+    private String uploadRootPath;
+
     public boolean isDuplicate(String email) {
         if (userRepository.existsByEmail(email)) {
             log.warn("이메일이 중복되었습니다. - {}", email);
@@ -34,7 +43,8 @@ public class UserService {
         } else return false;
     }
 
-    public UserSignUpResponseDTO create(final UserSignUpRequestDTO dto) {
+    public UserSignUpResponseDTO create(
+            final UserSignUpRequestDTO dto, final String uploadedFilePath) {
         String email = dto.getEmail();
 
         if (isDuplicate(email)) {
@@ -46,7 +56,7 @@ public class UserService {
         dto.setPassword(encoded);
 
         // dto를 User Entity로 변환해서 저장.
-        User saved = userRepository.save(dto.toEntity());
+        User saved = userRepository.save(dto.toEntity(uploadedFilePath));
         log.info("회원 가입 정상 수행됨! - saved user - {}", saved);
 
         return new UserSignUpResponseDTO(saved);
@@ -95,5 +105,43 @@ public class UserService {
         String token = tokenProvider.createToken(saved);
 
         return new LoginResponseDTO(saved, token);
+    }
+
+    /**
+     * 업로드 된 파일을 서버에 저장하고 저장 경로를 리턴
+     *
+     * @param profileImage - 업로드 된 파일 정보
+     * @return 실제로 저장된 이미지 경로
+     * */
+    public String uploadProFileImage(MultipartFile profileImage) throws IOException {
+
+        // 루트 디렉토리가 실존하는 지 확인 후 존재하는지 않으면 생성
+        File rootDir = new File(uploadRootPath);
+
+        if(!rootDir.exists()){
+            rootDir.mkdirs();
+        }
+
+        // 파일명을 유니크하게 변경(이름 충돌 가능성을 대비)
+        // UUID 와 원본파일을 컬럼 -> 규칙은 없음
+        String uniqueFileName
+                = UUID.randomUUID() + "_" + profileImage.getOriginalFilename();
+
+        // 파일을 저장
+        File uploadFile = new File(uploadRootPath + "/" + uniqueFileName);
+        profileImage.transferTo(uploadFile);
+
+        return uniqueFileName;
+
+    }
+
+    public String findProfilePath(String userId) {
+
+        User user
+                = userRepository.findById(userId).orElseThrow(() -> new RuntimeException());
+        // DB 에는 파일명만 저장 -> service 가 가지고 있는 Root Path 와 연결 해서 리턴
+
+        return uploadRootPath + "/" + user.getProfileImage() ;
+
     }
 }
