@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../scss/Join.scss';
 
 const Join = () => {
-  //useRef 를 사용해서 태그 참조하기
+  // useRef를 사용해서 태그 참조하기
   const $fileTag = useRef();
 
   // 리다이렉트 효과 사용하기
@@ -187,15 +187,14 @@ const Join = () => {
       해 주는 타입. -> multipart/form-data에도 허용됨.
     */
 
-    // JSON을 Blob 타입으로 변경
+    // JSON을 Blob 타입으로 변경.
     const userJsonBlob = new Blob([JSON.stringify(userValue)], {
       type: 'application/json',
     });
 
-    // 이미지 파일과 회원정보 JSON을 하나로 묶어서 보낼 예정
-    // FormData 객체를 활용
+    // 이미지 파일과 회원정보 JSON을 하나로 묶어서 보낼 예정.
+    // FormData 객체를 활용해서.
     const userFormData = new FormData();
-
     userFormData.append('user', userJsonBlob);
     userFormData.append('profileImage', $fileTag.current.files[0]);
 
@@ -207,7 +206,7 @@ const Join = () => {
     if (res.status === 200) {
       const data = await res.json();
       alert(`${data.userName}(${data.email})님 회원가입에 성공했습니다.`);
-      // 로그인 페이지 이동
+      // 로그인 페이지로 리다이렉트
       navigate('/login');
     } else {
       alert('서버와의 통신이 원활하지 않습니다.');
@@ -227,14 +226,14 @@ const Join = () => {
   };
 
   // 이미지 파일 상태 변수
-  const [imgFile, setImageFile] = useState(null);
+  const [imgFile, setImgFile] = useState(null);
 
-  // 이미지 파일을 선택 했을 때 썸네일 뿌리는 핸들러
+  // 이미지 파일을 선택했을 때 썸네일 뿌리는 핸들러
   const showThumbnailHandler = (e) => {
     // 첨부된 파일 정보
     const file = $fileTag.current.files[0];
 
-    // 첨부한 파일 이름을 얻은 후 확장자만 추출(소문자로 일괄 변경)
+    // 첨부한 파일 이름을 얻은 후 확장자만 추출. (소문자로 일괄 변경)
     const fileExt = file.name.slice(file.name.indexOf('.') + 1).toLowerCase();
 
     if (
@@ -243,18 +242,18 @@ const Join = () => {
       fileExt !== 'jpeg' &&
       fileExt !== 'gif'
     ) {
-      alert('이미지 파일(jpg, png, jpeg, gif)만 등록이 가능합니다.');
-      // 형식에 맞지 않는 파일을 첨부한 것이 파악 됬다면, input 의 상태도 원래대로
-      // 돌려 놓아야 한다 그렇지 않으면 잘못된 파일을 input 태그가 여전히 기억함
-      // -> 서버 요청시 에러 유발
+      alert('이미지 파일(jpg, png, jpeg, gif)만 등록이 가능합니다!');
+      // 형식에 맞지 않는 파일을 첨부한 것이 파악됐다면, input의 상태도 원래대로 돌려놓아야 한다.
+      // 그렇지 않으면 잘못된 파일을 input 태그가 여전히 기억하게 됨 -> 서버 요청 시 에러 유발!
       $fileTag.current.value = '';
       return;
     }
 
     const reader = new FileReader();
+    reader.readAsDataURL(file);
 
     reader.onloadend = () => {
-      setImageFile(reader.result());
+      setImgFile(reader.result);
     };
   };
 
