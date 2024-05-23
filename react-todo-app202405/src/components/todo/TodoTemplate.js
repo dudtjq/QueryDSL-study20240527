@@ -50,6 +50,10 @@ const TodoTemplate = () => {
     if (res.status === 200) {
       const json = await res.json();
       setTodos(json.todos);
+    } else if (res.status === 401) {
+      const message = await res.json();
+      alert(message);
+      redirection('/login');
     } else if (res.status === 403) {
       const text = await res.text();
       alert(text);
