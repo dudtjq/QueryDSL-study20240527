@@ -7,7 +7,7 @@ const TodoHeader = ({ count, promote }) => {
   const dateString = today.toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'long',
-    day: '2-digit',
+    day: 'numeric',
   });
 
   const dayName = today.toLocaleDateString('ko-KR', {
@@ -20,11 +20,10 @@ const TodoHeader = ({ count, promote }) => {
     }
   };
 
-  // 회원 등급에 따른 조건별 랜더링
+  // 회원 등급에 따른 조건별 렌더링
   const gradeView = () => {
     const role = localStorage.getItem('USER_ROLE');
-    console.log('TodoHeader -> role :', role);
-
+    console.log('TodoHeader -> role: ', role);
     if (role === 'COMMON') {
       return (
         <span className="promote badge bg-warning" onClick={upgrade}>
