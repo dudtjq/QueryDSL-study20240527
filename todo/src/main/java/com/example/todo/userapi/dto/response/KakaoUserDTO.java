@@ -1,5 +1,6 @@
 package com.example.todo.userapi.dto.response;
 
+import com.example.todo.userapi.entity.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
@@ -39,5 +40,16 @@ public class KakaoUserDTO {
 
 
     }
+
+    public User toEntity(String accessToken){
+        return User.builder()
+                .email(this.getKakaoAccount().getEmail())
+                .userName(kakaoAccount.profile.nickname)
+                .password("password!")
+                .profileImage(this.kakaoAccount.profile.profileImageUrl)
+                .accessToken(accessToken)
+                .build();
+    }
+
 
 }

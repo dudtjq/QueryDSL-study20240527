@@ -36,10 +36,16 @@ public class User {
     private Role role = Role.COMMON; // 유저 권한
 
     private String profileImage; // 프로필 이미지 경로
+    
+    private String accessToken; // 카카오 로그인시 발급 받는 accessToken 을 저장 -> 로그아웃이 필요
 
     // 등급 수정 메서드 (엔터티에 @setter를 설정하지 않고 변경 가능성이 있는 필드를 직접 수정하는 메서드를 작성하는 것이 일반적)
     public void changeRole(Role role) {
         this.role = role;
+    }
+
+    public void changeAccessToken(String accessToken){
+        this.accessToken = accessToken;
     }
 
 

@@ -157,13 +157,19 @@ public class UserService {
 
         User user
                 = userRepository.findById(userId).orElseThrow(() -> new RuntimeException());
-        // DB 에는 파일명만 저장 -> service 가 가지고 있는 Root Path 와 연결 해서 리턴
 
-        return uploadRootPath + "/" + user.getProfileImage() ;
+        String profileImage = user.getProfileImage();
+
+        if(profileImage.startsWith("http://")){
+            return profileImage;
+        }
+
+        // DB 에는 파일명만 저장 -> service 가 가지고 있는 Root Path 와 연결 해서 리턴
+        return uploadRootPath + "/" + user.getProfileImage();
 
     }
 
-    public void kakaoService(String code) {
+    public LoginResponseDTO kakaoService(String code) {
 
         // 인가 코드를 통해 토큰을 발급받기
         String accessToken = getKakaoAccessToken(code);
@@ -177,7 +183,23 @@ public class UserService {
         // 회원가입 처리 -> 이메일 중복 검사 진행 -> 자체 jwt 를 생성해서 토큰을 화면단에 리턴
         // -> 화면단에선서는 적절한 url 을 선택하여 redirect 를 진행
 
-        
+        if(!isDuplicate(kakaoUserDTO.getKakaoAccount().getEmail())){
+            // 이메일이 중복되지 않았음 -> 이젠에 카카오 로그인 한 적이 없음 -> DB에 데이터 세팅
+            User saved = userRepository.save(kakaoUserDTO.toEntity(accessToken));
+        }
+
+        // 이메일이 중복이 됨! -> 이전에 로그인을 한적이 있다! -> DB에 데이터를 또 넣을 필요는 없다
+        User foundUser = userRepository.findByEmail(
+                kakaoUserDTO.getKakaoAccount().getEmail()).orElseThrow();
+
+        //  우리 사이트에서 사용하는 jwt 를 생성.
+        String token = tokenProvider.createToken(foundUser);
+
+        // 기존에 로그인 했던 사용자의 access token 값을 update
+        foundUser.changeAccessToken(accessToken);
+        userRepository.save(foundUser);
+
+        return new LoginResponseDTO(foundUser, token);
 
 
     }
@@ -265,5 +287,32 @@ public class UserService {
 
 
 
+    }
+
+    // 로그아웃 메서드
+    public String logout(TokenUserInfo userInfo) {
+
+        User foundUser = userRepository.findById(userInfo.getUserId()).orElseThrow();
+
+        String accessToken = foundUser.getAccessToken();
+
+        // accessToken 이 null 이 아니라면 카카오 로그인 한 유저이다
+        if(accessToken != null){
+            String reqURI = "https://kapi.kakao.com/v1/user/logout";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + accessToken);
+
+            ResponseEntity<String> responseData
+                    = new RestTemplate()
+                    .exchange(reqURI, HttpMethod.POST, new HttpEntity<>(headers), String.class);
+
+            foundUser.changeAccessToken(null);
+            userRepository.save(foundUser);
+
+            return responseData.getBody();
+        }
+        
+        return null;
     }
 }

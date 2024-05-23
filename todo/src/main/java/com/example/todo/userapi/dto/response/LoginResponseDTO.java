@@ -25,7 +25,6 @@ public class LoginResponseDTO {
     private String role; // 권한
 
     public LoginResponseDTO(User user, String token) {
-
             this.email = user.getEmail();
             this.userName = user.getUserName();
             this.joinDate = LocalDate.from(user.getJoinDate());
