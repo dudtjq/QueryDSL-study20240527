@@ -13,6 +13,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /*
+    * @RestControllerAdvice 로 등록된 전역 예외 처리 방식은 Controller 에서 발생된 예외만 처리함
+    * Service, Repository, Filter 에서 발생하는 예외는 처리하지 못함
+    * ExceptionHandler 처럼 security filter 단에서 발생하는 예외 타입은 애초에 요청 자체가
+    * Controller 에 닿지 못하기 때문에 처리 할 수 없다
+    *
+    *  @ExceptionHandler(ExpiredJwtException.class)
+       public ResponseEntity<?> handleRuntimeException(ExpiredJwtException e) {
+       log.info("ExpiredJwtException 발생!");
+       return ResponseEntity.badRequest().body(e.getMessage());
+    }
+    * */
+
     @ExceptionHandler({RuntimeException.class, NoRegisteredArgumentException.class})
     public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
         return ResponseEntity.badRequest().body(e.getMessage());
