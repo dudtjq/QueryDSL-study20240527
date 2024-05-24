@@ -72,7 +72,7 @@ axiosInstance.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${assessToken}`;
           // axios 인스턴스의 기본 header Authorization 도 최신
           // 토큰으로 바꿔놓기
-          axios.defaults.headers.common.Authorization = `Bearer ${assessToken}`;
+          axiosInstance.defaults.headers.common.Authorization = `Bearer ${assessToken}`;
 
           // axiosInstance을 사용해서 다시 한 번 원본의 요청을 보내고,
           // 응답값을 원래 호출한 곳으로 리턴

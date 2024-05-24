@@ -25,7 +25,6 @@ public class TokenProvider {
     // @Value: properties 형태의 파일 내용을 읽어서 변수에 대입해주는 아노테이션 (yml도 가능)
     @Value("${jwt.secret}")
     private String SECRET_KEY;
-
     @Value("${jwt.refresh-secret}")
     private String REFRESH_SECRET_KEY;
 
@@ -34,11 +33,7 @@ public class TokenProvider {
      * @param userEntity - 토큰의 내용(클레임)에 포함될 유저 정보
      * @return - 생성된 JSON을 암호화 한 토큰값
      */
-    public String createToken(
-            User userEntity
-            , String secretKey
-            , long duration
-            , ChronoUnit unit) {
+    public String createToken(User userEntity, String secretKey, long duration, ChronoUnit unit) {
         // 토큰 만료 시간 생성
         Date expiry = Date.from(
                 Instant.now().plus(duration, unit)
@@ -68,7 +63,7 @@ public class TokenProvider {
                         SignatureAlgorithm.HS512
                 )
                 // token payload에 들어갈 클레임 설정
-                .setClaims(claims)
+                .setClaims(claims) // 추가 클레임을 먼저 설정해야 함.
                 .setIssuer("Todo운영자") // iss: 발급자 정보
                 .setIssuedAt(new Date()) // iat: 발급 시간
                 .setExpiration(expiry) // exp: 만료 시간
@@ -76,31 +71,31 @@ public class TokenProvider {
                 .compact();
     }
 
-    public String createAccessKey(User userEntity){
-
-        return createToken(userEntity, SECRET_KEY, 30, ChronoUnit.SECONDS);
-
+    public String createAccessKey(User userEntity) {
+        return createToken(userEntity, SECRET_KEY, 15, ChronoUnit.SECONDS);
     }
 
-    public String createRefreshKey(User userEntity){
-
-        return createToken(userEntity, REFRESH_SECRET_KEY, 10, ChronoUnit.MINUTES);
-
+    public String createRefreshKey(User userEntity) {
+        return createToken(userEntity, REFRESH_SECRET_KEY, 2, ChronoUnit.MINUTES);
     }
 
-    /*
-     * 토큰에서 클레임을 추출하는 로직을 분리함
-     */
+    // 토큰에서 클레임을 추출하는 로직을 분리했습니다.
     private Claims getClaims(String token, String secretKey) {
         Claims claims = Jwts.parserBuilder()
                 //토큰 발급자의 발급 당시의 서명을 넣어줌.
-                .setSigningKey(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
+                .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
                 // 서명 위조 검사: 위조된 경우에는 예외가 발생합니다.
                 // 위조가 되지 않은 경우 payload를 리턴
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
         return claims;
+    }
+
+    // 리프레시 토큰 만료시간만 추출하기
+    public Date getExpiryDate(String token) {
+        Claims claims = getClaims(token, REFRESH_SECRET_KEY);
+        return claims.getExpiration();
     }
 
     /**
@@ -122,17 +117,15 @@ public class TokenProvider {
                 .build();
     }
 
-    // refresh token 의 유효성을 검사함
-    public boolean validateRefreshToken(String token){
-
+    // refresh token의 유효성을 검사합니다.
+    public boolean validateRefreshToken(String token) {
         try {
             getClaims(token, REFRESH_SECRET_KEY);
             return true;
         } catch (Exception e) {
-            log.warn("유효하지 않은 리프레시 토큰입니다.");
+            log.warn("유효하지 않은 리프레시 토큰!");
             return false;
         }
-
     }
 
 
