@@ -16,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -27,6 +28,8 @@ public class WebSecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
+    private final CustomAuthenticationEntityPoint entityPoint;
+    private final AccessDeniedHandler deniedHandler;
 
     // 시큐리티 기본 설정 (권한 처리, 초기 로그인 화면 없애기 ....)
     @Bean // 라이브러리 클래스 같은 내가 만들지 않은 객체를 등록해서 주입받기 위한 아노테이션.
@@ -55,21 +58,22 @@ public class WebSecurityConfig {
                                 // .requestMatchers(HttpMethod.POST, "/api/todos").hasRole("ADMIN")
 
                                 // /api/auth/**은 permit 이지만, /promote 는 검증이 필요하기 때문에 추가. (순서 조심!)
-                                .requestMatchers(HttpMethod.PUT, "/api/auth/promote")
-                                .authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/api/auth/promote").hasAnyRole("COMMON")
+                                .requestMatchers(HttpMethod.PUT, "/api/auth/promote").authenticated()
                                 .requestMatchers("/api/auth/load-profile").authenticated()
                                 // '/api/auth'로 시작하는 요청과 '/'요청은 권한 검사 없이 허용하겠다.
                                 .requestMatchers("/", "/api/auth/**")
                                 .permitAll()
                                 // 위에서 따로 설정하지 않은 나머지 요청들은 권한 검사가 필요하다.
                                 .anyRequest().authenticated()
-                );
-//                .exceptionHandling(ExceptionHandling -> {
-//                    // 인증 과정에서 예외가 발생한 경우 예외를 전달한다
-//                    ExceptionHandling.authenticationEntryPoint(new CustomAuthenticationEntityPoint())
-//                })
-
-
+                )
+                .exceptionHandling(ExceptionHandling -> {
+                    // 인증 과정에서 예외가 발생한 경우 예외를 전달한다(401 예외를 잡음)
+//                    ExceptionHandling.authenticationEntryPoint(entityPoint);
+                    // 인가과정에서 예외가 발생한 경우 예외를 전달함(403 예외를 잡음)
+                    ExceptionHandling.accessDeniedHandler(deniedHandler);
+                });
+        
         return http.build();
     }
 

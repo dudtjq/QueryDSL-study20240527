@@ -42,6 +42,9 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
         } catch (JwtException e){
             log.warn("JwtException 이 발생함");
             setErrorResponse(response, ErrorCode.INVALID_TOKEN);
+        } catch (IllegalArgumentException e){
+            log.warn("토큰이 전달되지 않음!");
+            setErrorResponse(response, ErrorCode.INVALID_AUTH);
         }
 
     }

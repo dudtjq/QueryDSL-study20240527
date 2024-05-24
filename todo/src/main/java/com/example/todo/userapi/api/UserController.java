@@ -99,7 +99,7 @@ public class UserController {
     @PutMapping("/promote")
     // 권한 검사 (해당 권한이 아니라면 인가처리 거부 -> 403 상태 리턴)
     // 메서드 호출 전에 검사 -> 요청 당시 토큰에 있는 user 정보가 ROLE_COMMON이라는 권한을 가지고 있는지를 검사.
-    @PreAuthorize("hasRole('ROLE_COMMON')")
+ //   @PreAuthorize("hasRole('ROLE_COMMON')")
     public ResponseEntity<?> promote(
             @AuthenticationPrincipal TokenUserInfo userInfo
     ) {

@@ -42,10 +42,10 @@ const Header = () => {
       res.status === 200 &&
       res.headers.get('Content-type').startsWith('image')
     ) {
-      // 서버에서는 byte[] 로 직렬화된 이미지가 응답되므로
-      // blob() 을 통해 전달 받아야 한다 (json() xxxxx)
+      // 서버에서는 byte[]로 직렬화된 이미지가 응답되므로
+      // blob()을 통해 전달받아야 한다. (json() xxxxx)
       const profileBlob = await res.blob();
-      // 해당 이미지를 imUrl로 변경
+      // 해당 이미지를 imgUrl로 변경
       const imgUrl = window.URL.createObjectURL(profileBlob);
       setProfileUrl(imgUrl);
     } else if (
@@ -62,11 +62,9 @@ const Header = () => {
   };
 
   // 로그인의 상태가 변화할 때 화면이 리렌더링 되고,
-  // 그에 맞는 회원의 프로필 이미지 요청이 들어갈 수 있도록 처리
+  // 그에 맞는 회원의 프로필 이미지 요청이 들어갈 수 있도록 처리.
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchProfileImage();
-    }
+    if (isLoggedIn) fetchProfileImage();
   }, [isLoggedIn]);
 
   return (
@@ -92,7 +90,7 @@ const Header = () => {
               {isLoggedIn && (
                 <img
                   src={profileUrl || require('../../assets/img/anonymous.jpg')}
-                  alt="프로필 사진"
+                  alt="프사프사"
                   style={{
                     marginLeft: 20,
                     width: 75,
