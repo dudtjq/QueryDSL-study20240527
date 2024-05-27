@@ -32,7 +32,8 @@ public class GlobalExceptionHandler {
 //    }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleRuntimeException(IllegalArgumentException e) {
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.info("handleIllegalArgumentException error !!!");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
 

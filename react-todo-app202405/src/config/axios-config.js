@@ -47,6 +47,7 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     // 응답에 에러가 발생하면 실행 할 두번째 함수
+    // 에러가 나고 나서 첫번째 시도 인지 !originalRequest._retry(ture)
     if (error.response.status === 401 && !originalRequest._retry) {
       // _retry 속성은 사용자 정의 속성임. 최초 요청에서는 존재하지 않는다
       // 만약 재요청 시에도 문제가 발생했다면(refresh 만료 등),
