@@ -302,6 +302,10 @@ void paging() {
     void join() {
         // given
 
+        // Oracle DB 경우 Oracle 의 조인 문법도 사용이 가능하다
+        // SELECT * FROM employees, departments WHERE ~~~
+        // select().from(employees, departments).where(~~~)
+
         // when
         List<Tuple> result = factory.select(member.userName, team.name)
                 .from(member)
@@ -350,9 +354,34 @@ void paging() {
         
         // when
         List<Member> result = factory.selectFrom(member)
-                .where(member.age.gt(
+                .where(member.age.eq(
                         //나이가 가장 많은 사람을 조회하는 서브쿼리문이 들어가야 함
                         JPAExpressions // 서브쿼리를 사용할 수 있게 해 주는 클레스
+                                .select(memberSub.age.max())
+                                .from(memberSub)
+                ))
+                .fetch();
+        // then
+        System.out.println("\n\n\n");
+        result.forEach(System.out::println);
+        System.out.println("\n\n\n");
+    }
+
+    @Test
+    @DisplayName("나이가 평균 나이 이상인 회원을 조회")
+    void subQueryGoe() {
+        // given
+        QMember memberSub = new QMember("memberSub");
+        
+        // when
+        List<Member> result = factory.selectFrom(member)
+                .where(member.age.goe(
+                        JPAExpressions
+                                // JPAExpressions 는 from 절을 제외하고 select 와 where 절에서
+                                // 사용이 가능
+                                // JPQL 도 마찬가지로 from 절 서브쿼리 사용이 불가
+                                // -> Native SQL 을 작성 하던지, MyBatis or JdbcTemplate 이용,
+                                // 따로따로 두 번 조회도 사용
                                 .select(memberSub.age.avg())
                                 .from(memberSub)
                 ))
@@ -363,4 +392,19 @@ void paging() {
         System.out.println("\n\n\n");
     }
 
+    @Test
+    @DisplayName("동적 sql 테스트")
+    void dynamicQueryTest() {
+        // given
+        String name = "member1";
+        Integer age = 10;
+        // when
+        List<Member> result = memberRepository.findUser(name, age);
+        // then
+        System.out.println("\n\n\n");
+        result.forEach(System.out::println);
+        System.out.println("\n\n\n");
+
+    }
+    
 }
