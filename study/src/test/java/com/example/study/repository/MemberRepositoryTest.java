@@ -4,6 +4,8 @@ package com.example.study.repository;
 import com.example.study.entity.Member;
 import com.example.study.entity.QMember;
 import com.example.study.entity.Team;
+import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.JPQLQueryFactory;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static com.example.study.entity.QMember.member;
+import static com.example.study.entity.QTeam.team;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -47,34 +50,36 @@ class MemberRepositoryTest {
     @Test
     void testInsertData() {
 
-        Team teamA = Team.builder()
-                .name("teamA")
-                .build();
-        Team teamB = Team.builder()
-                .name("teamB")
-                .build();
-
-        teamRepository.save(teamA);
-        teamRepository.save(teamB);
+//        Team teamA = Team.builder()
+//                .name("teamA")
+//                .build();
+//        Team teamB = Team.builder()
+//                .name("teamB")
+//                .build();
+//
+//        teamRepository.save(teamA);
+//        teamRepository.save(teamB);
+        Team teamA = teamRepository.findById(1L).orElseThrow();
+        Team teamB = teamRepository.findById(2L).orElseThrow();
 
         Member member1 = Member.builder()
-                .userName("member1")
-                .age(10)
+                .userName("member5")
+                .age(50)
                 .team(teamA)
                 .build();
         Member member2 = Member.builder()
-                .userName("member2")
-                .age(20)
+                .userName("member6")
+                .age(50)
                 .team(teamA)
                 .build();
         Member member3 = Member.builder()
-                .userName("member3")
-                .age(30)
+                .userName("member7")
+                .age(60)
                 .team(teamB)
                 .build();
         Member member4 = Member.builder()
-                .userName("member4")
-                .age(40)
+                .userName("member8")
+                .age(60)
                 .team(teamB)
                 .build();
 
@@ -192,5 +197,170 @@ void testFetchResult() {
 
 }
 
+@Test
+@DisplayName("Query custom 설정 확인")
+void queryDslCustom() {
+    // given
+    String name = "member4";
+    // when
+    List<Member> result = memberRepository.findByName(name);
+    // then
+    assertEquals(1, result.size());
+    assertEquals("teamB", result.get(0).getTeam().getName());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+@Test
+@DisplayName("회원 정렬 조회")
+void sort() {
+    // given
+
+    // when
+    List<Member> result = factory.selectFrom(member)
+            //        .where(원하는 조건)
+            .orderBy(member.age.desc())
+            .fetch();
+
+    // then
+    assertEquals(result.size(), 8);
+
+    System.out.println("\n\n\n");
+    result.forEach(System.out::println);
+    System.out.println("\n\n\n");
+}
+
+@Test
+@DisplayName("QueryDSL 페이징")
+void paging() {
+    // given
+
+    // when
+    List<Member> page = factory.selectFrom(member)
+            .orderBy(member.userName.desc())
+            .offset(3)
+            .limit(3)
+            .fetch();
+
+    // then
+    assertEquals(page.size(), 3);
+
+    System.out.println("\n\n\n");
+    page.forEach(System.out::println);
+    System.out.println("\n\n\n");
+    }
+
+    @Test
+    @DisplayName("그릅 함수의 종료")
+    void aggregation() {
+        // given
+
+        // when
+        List<Tuple> result = factory.select(
+                        member.count(), // 갯수
+                        member.age.sum(), // 나이의 총합
+                        member.age.max(), // 나이 최댓값
+                        member.age.min(), // 나이 최솟값
+                        member.age.avg() // 나이 평균
+                )
+                .from(member)
+                .fetch();
+
+        // Tuple : QueryDSL 에서 쿼리로 나온 결과 행들을 타입에 맟춰 담을 수 있게 제공되는 타입
+        Tuple tuple = result.get(0);
+
+        // then
+        assertEquals(tuple.get(member.count()), 8);
+        assertEquals(tuple.get(member.age.max()), 60);
+        assertEquals(tuple.get(member.age.min()), 10);
+
+        System.out.println("tuple.get(member.count()) = " + tuple.get(member.count()));
+        System.out.println("tuple.get(member.age.max()) = " + tuple.get(member.age.max()));
+        System.out.println("tuple.get(member.age.min()) = " + tuple.get(member.age.min()));
+        
+    }
+
+    @Test
+    @DisplayName("GROUP BY , HAVING")
+    void testGroupBy() {
+        // given
+
+        // when
+        List<Tuple> result = factory.select(member.age, member.age.count())
+                .from(member)
+                .groupBy(member.age)
+                .having(member.age.count().goe(2))
+                .orderBy(member.age.asc())
+                .fetch();
+
+        // then
+        result.forEach(System.out::println);
+    }
+
+    @Test
+    @DisplayName("join 해보기")
+    void join() {
+        // given
+
+        // when
+        List<Tuple> result = factory.select(member.userName, team.name)
+                .from(member)
+                // .join(기준 Entity.조인 대상 Entity, 별칭(QClass))
+                .join(member.team, team)
+                .where(team.name.eq("teamA"))
+                .fetch();
+
+        // then
+        System.out.println("\n\n\n");
+        result.forEach(System.out::println);
+        System.out.println("\n\n\n");
+
+    }
+
+    /*
+    * ex ) 회원과 팀을 조인 하면서 , 팀 이름이 teamA 인 팀만 조회, 회원은 모두 조회되어야 한다
+    * SQL : SELECT m.*, t.* FROM tbl_member m LEFT JOIN tbl_team t
+    * ON m.team_id = t.team_id WHERE t.name = 'teamA'
+    *
+    * JPQL : SELECT FROM Member m LEFT JOIN m.team ON t.name = 'teamA';
+    * */
+    @Test
+    @DisplayName("left outer join test")
+    void leftJoinTest() {
+        // given
+
+        // when
+        List<Tuple> result = factory.select(member, team)
+                .from(member)
+                .leftJoin(member.team, team)
+                .on(team.name.eq("teamA"))
+                .fetch();
+        // then
+        System.out.println("\n\n\n");
+        result.forEach(System.out::println);
+        System.out.println("\n\n\n");
+    }
+    
+    @Test
+    @DisplayName("sub Query 사용하기 (나이가 가장 많은 회원 조회)")
+    void subQueryTest() {
+        // given
+        // 같은 테이블에서 서브쿼리를 적용하려면 별도의 QClass 의 객체를 생성 해야함
+        QMember memberSub = new QMember("memberSub");
+        
+        // when
+        List<Member> result = factory.selectFrom(member)
+                .where(member.age.gt(
+                        //나이가 가장 많은 사람을 조회하는 서브쿼리문이 들어가야 함
+                        JPAExpressions // 서브쿼리를 사용할 수 있게 해 주는 클레스
+                                .select(memberSub.age.avg())
+                                .from(memberSub)
+                ))
+                .fetch();
+        // then
+        System.out.println("\n\n\n");
+        result.forEach(System.out::println);
+        System.out.println("\n\n\n");
+    }
 
 }
