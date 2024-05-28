@@ -42,6 +42,13 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response, // 응답에 문제가 없었다면 그대로 응답 내용 리턴
   async (error) => {
+    // 응답이 실패 했는데, 토큰 재발급이 필요하지 않은 상황(로그인을 하지 않고 요청)
+    // 밑에 로직이 실행 되지 않게 끔 return
+    if (error.response.data.message === 'INVALID_AUTH') {
+      console.log('로그인을 하지 않아 401 에러가 발생');
+      return Promise.reject(error);
+    }
+
     // 원본 요청의 정보를 기억을 해 놓기
     // -> 새 토큰을 받아서 다시 보내는 용도
     const originalRequest = error.config;
